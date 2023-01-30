@@ -1,4 +1,6 @@
-# From https://github.com/denizetkar/priority-queue by denizetkar
+# Original From https://github.com/denizetkar/priority-queue by denizetkar
+# Modified
+import typing import Any
 
 class PriorityQueue:
     def __init__(
@@ -98,7 +100,7 @@ class PriorityQueue:
         self._add_elem_idx(elem=elem, idx=len(self))
         self._heap.append(elem)
 
-    def put(self, elem):
+    def put(self, elem)->None:
         self._append(elem)
         self._bubble_up(len(self) - 1)
 
@@ -108,7 +110,7 @@ class PriorityQueue:
         self._remove_elem_idx(elem=elem)
         return elem
 
-    def pop(self):
+    def pop(self)->Any:
         if len(self) == 0:
             return None
         self._swap_elems(0, len(self) - 1)
@@ -116,7 +118,7 @@ class PriorityQueue:
         self._bubble_down(0)
         return elem
 
-    def update_elem(self, elem_id, new_elem):
+    def update_elem(self, elem_id: Any, new_elem: Any) -> None:
         idx = self._get_elem_idxs(elem_id=elem_id)
         if idx is None:
             return
