@@ -8,21 +8,15 @@ class QBLBandit:
         self.arms: list[BanditArm] = arms
         self.k: int = len(self.arms)
 
-        self.in_active_term: dict[str, bool] = {
-            arm.index_name: False for arm in self.arms
-        }
-        self.last_term_reward: dict[str, float] = {
-            arm.index_name: 1.0 for arm in self.arms
-        }
+        self.in_active_term: dict[str, bool] = {arm.index_name: False for arm in self.arms}
+        self.last_term_reward: dict[str, float] = {arm.index_name: 1.0 for arm in self.arms}
         self.last_term_length: dict[str, int] = {arm.index_name: 1 for arm in self.arms}
         self.total_last_term_reward: float = float(len(self.arms))
         self.total_last_term_length: int = len(self.arms)
         self.queue: PriorityQueue = PriorityQueue(
             [(i, arm) for i, arm in enumerate(self.arms)]
         )
-        self.priority: dict[str, int] = {
-            arm.index_name: i for i, arm in enumerate(self.arms)
-        }
+        self.priority: dict[str, int] = {arm.index_name: i for i, arm in enumerate(self.arms)}
 
     def select_arms(self, m: int) -> list[BanditArm]:
         selected: list[BanditArm] = []
@@ -56,9 +50,7 @@ class QBLBandit:
             weighted_global_avg: float = self.total_last_term_reward / float(
                 self.total_last_term_length
             )
-            local_avg: float = self.last_term_reward[idx] / float(
-                self.last_term_length[idx]
-            )
+            local_avg: float = self.last_term_reward[idx] / float(self.last_term_length[idx])
 
             is_rewarding: bool = (
                 weighted_global_avg
