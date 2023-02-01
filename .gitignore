@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 /.idea/*
+=======
+__pycache__
+>>>>>>> refs/remotes/origin/main
