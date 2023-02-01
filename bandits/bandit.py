@@ -1,25 +1,22 @@
-import logging
+
 from abc import abstractmethod
-
-import numpy
-
-import constants
+from bandit_arm import BanditArm
 
 class Bandit:
 
     def __init__(self):
-        self.arms: list = []
+        self.arms: list[BanditArm] = []
 
     @abstractmethod
-    def select_arm(self, current_round: int) -> list:
+    def select_arms(self, m: int, current_round: int) -> list[BanditArm]:
         pass
     
     @abstractmethod
-    def update(self, played_arms: list, rewards: list) -> None:
+    def update(self, arms_played: list[BanditArm], arms_reward: dict[str, tuple[float,float]]) -> None:
         pass
 
     @abstractmethod
-    def set_arms(self, arms: list) -> None:
+    def set_arms(self, arms: list[BanditArm]) -> None:
         pass
 
     @abstractmethod
