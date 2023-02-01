@@ -11,7 +11,7 @@ from database.dta_test_run_v2 import DTARunner
 from shared import configs_v2 as configs, helper
 
 # Define Experiment ID list that we need to run
-exp_id_list = ["tpc_h_skew_static_10_MAB3"]
+exp_id_list = ["tpc_h_skew_static_10_MAB"]
 
 # Comparing components
 OPTIMAL = constants.COMPONENT_OPTIMAL in configs.components

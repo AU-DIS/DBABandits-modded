@@ -123,6 +123,7 @@ def get_queries_v2():
         while line:
             queries.append(json.loads(line))
             line = f.readline()
+    print("helper.py: Loaded queries ")
     return queries
 
 
@@ -180,15 +181,22 @@ def plot_exp_report(exp_id, exp_report_list, measurement_names, log_y=False):
             final_df = pd.concat([final_df, df])
             comps.append(exp_report.component_id)
 
-        final_df = final_df[final_df[constants.DF_COL_MEASURE_NAME] == measurement_name]
+        final_df = final_df[final_df[constants.DF_COL_MEASURE_NAME] == measurement_name][[constants.DF_COL_BATCH,constants.DF_COL_MEASURE_VALUE]]
         # Error style = 'band' / 'bars'
-        sns_plot = sns.relplot(x=constants.DF_COL_BATCH, y=constants.DF_COL_MEASURE_VALUE, hue=constants.DF_COL_COMP_ID,
-                               kind="line", ci="sd", data=final_df, err_style="band")
-        if log_y:
-            sns_plot.set(yscale="log")
-        plot_title = measurement_name + " Comparison"
-        sns_plot.set(xlabel=constants.DF_COL_BATCH, ylabel=measurement_name)
-        sns_plot.savefig(get_experiment_folder_path(exp_id) + plot_title + '.png')
+        print(final_df.dtypes)
+        print(constants.DF_COL_BATCH)
+        print(constants.DF_COL_MEASURE_VALUE)
+        print(constants.DF_COL_COMP_ID)
+        plot = final_df.plot.line( x=constants.DF_COL_BATCH, y=constants.DF_COL_MEASURE_VALUE) #, hue=None,
+                           # errorbar="sd", err_style="band")
+        plot_title = measurement_name+"Comparison"                   
+        
+        plot.figure.savefig(plot_title.replace(" ","_")+".png")
+        #if log_y:
+        #    sns_plot.set(yscale="log")
+        #plot_title = measurement_name + " Comparison"
+        #sns_plot.set(xlabel=constants.DF_COL_BATCH, ylabel=measurement_name)
+        #sns_plot.savefig(get_experiment_folder_path(exp_id) + plot_title + '.png')
 
 
 def create_comparison_tables(exp_id, exp_report_list):

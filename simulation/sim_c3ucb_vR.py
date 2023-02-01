@@ -8,6 +8,7 @@ import numpy
 from pandas import DataFrame
 
 import bandits.bandit_c3ucb_v2 as bandits
+import bandits.bandit_random as randombandits
 import bandits.bandit_helper_v2 as bandit_helper
 import constants as constants
 import database.sql_connection as sql_connection
@@ -61,6 +62,7 @@ class Simulator(BaseSimulator):
         configs.max_memory -= int(sql_helper.get_current_pds_size(self.connection))
         oracle = Oracle(configs.max_memory)
         c3ucb_bandit = bandits.C3UCB(context_size, configs.input_alpha, configs.input_lambda, oracle)
+        #c3ucb_bandit = randombandits.RandomBandit()
 
         # Running the bandit for T rounds and gather the reward
         arm_selection_count = {}
@@ -71,7 +73,55 @@ class Simulator(BaseSimulator):
         query_obj_additions = []
         total_time = 0.0
 
+        #bandit_helper.max_arms_counter(self.connection)
+
+###########################
+        # New set of queries in this batch, required for query execution
+        queries_current_batch = self.queries
+        t = 0
+        # Adding new queries to the query store
+        query_obj_list_current = []
+        for n in range(len(queries_current_batch)):
+            query = queries_current_batch[n]
+            query_id = query['id']
+            if query_id in self.query_obj_store:
+                query_obj_in_store = self.query_obj_store[query_id]
+                query_obj_in_store.frequency += 1
+                query_obj_in_store.last_seen = t
+                query_obj_in_store.query_string = query['query_string']
+                if query_obj_in_store.first_seen == -1:
+                    query_obj_in_store.first_seen = t
+            else:
+                print("New query ID: " + str(query_id))
+                print(type(query_id))
+                query = Query(self.connection, query_id, query['query_string'], query['predicates'],
+                                query['payload'], t)
+                query.context = bandit_helper.get_query_context_v1(query, all_columns, number_of_columns)
+                self.query_obj_store[query_id] = query
+            query_obj_list_current.append(self.query_obj_store[query_id])
+
+        index_arms = {}
+        query_obj_list_past = query_obj_list_current
+        for i in range(len(query_obj_list_past)):
+            bandit_arms_tmp = bandit_helper.gen_arms_from_predicates_v2(self.connection, query_obj_list_past[i])
+            for key, index_arm in bandit_arms_tmp.items():
+                if key not in index_arms:
+                    index_arm.query_ids = set()
+                    index_arm.query_ids_backup = set()
+                    index_arm.clustered_index_time = 0
+                    index_arms[key] = index_arm
+                index_arm.clustered_index_time += max(
+                    query_obj_list_past[i].table_scan_times[index_arm.table_name]) if \
+                    query_obj_list_past[i].table_scan_times[index_arm.table_name] else 0
+                index_arms[key].query_ids.add(index_arm.query_id)
+                index_arms[key].query_ids_backup.add(index_arm.query_id)
+        print("Number of arms generated from entire workload: " + str(len(index_arms.keys)))
+#########################
+
+
+
         for t in range((configs.rounds + configs.hyp_rounds)):
+            print("Started new round")
             logging.info(f"round: {t}")
             start_time_round = datetime.datetime.now()
             # At the start of the round we will read the applicable set for the current round. This is a workaround
@@ -100,6 +150,8 @@ class Simulator(BaseSimulator):
                     if query_obj_in_store.first_seen == -1:
                         query_obj_in_store.first_seen = t
                 else:
+                    print("New query ID: " + str(query_id))
+                    print(type(query_id))
                     query = Query(self.connection, query_id, query['query_string'], query['predicates'],
                                   query['payload'], t)
                     query.context = bandit_helper.get_query_context_v1(query, all_columns, number_of_columns)
@@ -128,6 +180,7 @@ class Simulator(BaseSimulator):
 
             # Get the predicates for queries and Generate index arms for each query
             index_arms = {}
+            print("Length_of_past: "+ str(len(query_obj_list_past)))
             for i in range(len(query_obj_list_past)):
                 bandit_arms_tmp = bandit_helper.gen_arms_from_predicates_v2(self.connection, query_obj_list_past[i])
                 for key, index_arm in bandit_arms_tmp.items():
@@ -147,6 +200,7 @@ class Simulator(BaseSimulator):
                 index_arms = {}
             index_arm_list = list(index_arms.values())
             logging.info(f"Generated {len(index_arm_list)} arms")
+            print("Generated arms: " + str(len(index_arm_list)))
             c3ucb_bandit.set_arms(index_arm_list)
 
             # creating the context, here we pass all the columns in the database
@@ -163,6 +217,9 @@ class Simulator(BaseSimulator):
                                 ndmin=2))
             # getting the super arm from the bandit
             chosen_arm_ids = c3ucb_bandit.select_arm_v2(context_vectors, t)
+            #chosen_arm_ids = c3ucb_bandit.select_arm(index_arm_list, current_round=t)
+            print("Chosen arms: " + str(len(chosen_arm_ids)))
+            
             if t >= configs.hyp_rounds and t - configs.hyp_rounds > constants.STOP_EXPLORATION_ROUND:
                 chosen_arm_ids = list(best_super_arm)
 
@@ -222,6 +279,7 @@ class Simulator(BaseSimulator):
                 arm_selection_count = {}
 
             c3ucb_bandit.update_v4(chosen_arm_ids, arm_rewards)
+            #c3ucb_bandit.update(chosen_arm_ids, arm_rewards)
             super_arm_id = frozenset(chosen_arm_ids)
             if t >= configs.hyp_rounds:
                 if super_arm_id in super_arm_scores:

@@ -5,6 +5,8 @@ import constants as constants
 
 # Reading the configuration for given experiment ID
 exp_config = configparser.ConfigParser()
+print(constants.ROOT_DIR)
+print(constants.EXPERIMENT_CONFIG)
 exp_config.read(constants.ROOT_DIR + constants.EXPERIMENT_CONFIG)
 
 # experiment id for the current run

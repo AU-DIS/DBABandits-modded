@@ -18,9 +18,11 @@ def get_sql_connection():
     server = db_config[db_type]['server']
     database = db_config[db_type]['database']
     driver = db_config[db_type]['driver']
-
+    username = db_config[db_type]['username']
+    password = db_config[db_type]['password']
+    print(username)
     return pyodbc.connect(
-        r'Driver=' + driver + ';Server=' + server + ';Database=' + database + ';Trusted_Connection=yes;')
+            r'Driver=' + driver +';Server=' + server + ';Database=' + database +';Encrypt=no'+ ';Trusted_Connection=no;'+'UID='+username+';PWD='+password+';')
 
 
 def close_sql_connection(connection):

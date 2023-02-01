@@ -15,10 +15,10 @@ from database.table import Table
 db_config = configparser.ConfigParser()
 db_config.read(constants.ROOT_DIR + constants.DB_CONFIG)
 db_type = db_config['SYSTEM']['db_type']
-database = db_config[db_type]['database']
-
-table_scan_times_hyp = copy.deepcopy(constants.TABLE_SCAN_TIMES[database[:-4]])
-table_scan_times = copy.deepcopy(constants.TABLE_SCAN_TIMES[database[:-4]])
+database = 'TPCH'#db_config[db_type]['database']
+print(database)
+table_scan_times_hyp = copy.deepcopy(constants.TABLE_SCAN_TIMES[database])
+table_scan_times = copy.deepcopy(constants.TABLE_SCAN_TIMES[database])
 
 tables_global = None
 pk_columns_dict = {}
@@ -233,9 +233,13 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
     creation_cost = bulk_create_indexes(connection, schema_name, arm_list_to_add)
     execute_cost = 0
     arm_rewards = {}
+    #query_seen = {}
     if tables_global is None:
         get_tables(connection)
     for query in queries:
+        #if query.id in query_seen:
+        #    continue
+        #query_seen[query.id] = True
         time, non_clustered_index_usage, clustered_index_usage = execute_query_v1(connection, query.query_string)
         non_clustered_index_usage = merge_index_use(non_clustered_index_usage)
         clustered_index_usage = merge_index_use(clustered_index_usage)
@@ -778,7 +782,7 @@ def get_table_scan_times(connection, query_string):
 
 
 def get_table_scan_times_structure():
-    query_table_scan_times = copy.deepcopy(constants.TABLE_SCAN_TIMES[database[:-4]])
+    query_table_scan_times = copy.deepcopy(constants.TABLE_SCAN_TIMES[database])
     return query_table_scan_times
 
 

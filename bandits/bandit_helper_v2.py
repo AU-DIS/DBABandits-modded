@@ -8,6 +8,24 @@ from bandits.bandit_arm import BanditArm
 
 bandit_arm_store = {}
 
+def max_arms_counter(connection):
+    num_arms : int = 0
+    tables = sql_helper.get_tables(connection)
+    for table_name, table_predicates in tables.items():
+        print(table_name)
+        print(len(table_predicates.columns))
+        col_permutations = []
+        #if len(table_predicates) > 6:
+        #    table_predicates = table_predicates[0:6]
+        for j in range(1, (len(table_predicates.columns) + 1)):
+            col_permutations = col_permutations + list(itertools.permutations(table_predicates.columns, j))
+        print("Done permuting")
+        for col_permutation in col_permutations:
+            #arm_id = BanditArm.get_arm_id(col_permutation, table_name)
+            num_arms += 1
+        print("Done counting")
+    print("Number of arms: " + num_arms)
+
 
 def gen_arms_from_predicates_v2(connection, query_obj):
     """
