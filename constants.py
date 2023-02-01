@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import NewType, Union
 
 # ===============================  Program Related  ===============================
 DB_CONFIG = '/config/db.conf'
@@ -8,6 +9,7 @@ WORKLOADS_FOLDER = '/resources/workloads'
 EXPERIMENT_CONFIG = '/config/exp.conf'
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGGING_LEVEL = logging.INFO
+WorkloadType = NewType("WorkloadType", list[dict[str, Union[int, str, dict[str,list[str]]]]]) 
 
 TABLE_SCAN_TIME_LENGTH = 1000
 

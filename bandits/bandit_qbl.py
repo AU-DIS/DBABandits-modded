@@ -14,7 +14,9 @@ class QBLBandit(Bandit):
         self.last_term_length: dict[str, int] = {arm.index_name: 1 for arm in self.arms}
         self.total_last_term_reward: float = float(len(self.arms))
         self.total_last_term_length: int = len(self.arms)
-        self.queue: PriorityQueue = PriorityQueue([(i, arm) for i, arm in enumerate(self.arms)])
+        self.queue: PriorityQueue = PriorityQueue(
+            [(i, arm) for i, arm in enumerate(self.arms)]
+        )
         self.priority: dict[str, int] = {arm.index_name: i for i, arm in enumerate(self.arms)}
 
     def select_arms(self, m: int, current_round: int) -> list[BanditArm]:
@@ -31,7 +33,9 @@ class QBLBandit(Bandit):
 
         return selected
 
-    def update(self, arms_played: list[BanditArm], arms_reward: dict[str, tuple[float,float]]) -> None:
+    def update(
+        self, arms_played: list[BanditArm], arms_reward: dict[str, tuple[float, float]]
+    ) -> None:
         for arm in arms_played:
             idx: str = arm.index_name
             if not self.in_active_term[idx]:

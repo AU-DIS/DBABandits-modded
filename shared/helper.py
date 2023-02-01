@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from pandas import DataFrame
+from types import ModuleType
 
 import constants
 
@@ -254,7 +255,7 @@ def change_experiment(exp_id):
         exp_config.write(configfile)
 
 
-def log_configs(logging, module):
+def log_configs(logging: ModuleType, module: ModuleType) -> None:
     for variable in dir(module):
         if not variable.startswith('__'):
             logging.info(str(variable) + ': ' + str(getattr(module, variable)))
