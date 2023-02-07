@@ -1,12 +1,12 @@
 # Original From https://github.com/denizetkar/priority-queue by denizetkar
 # Modified
-import typing import Any
+from typing import Any
 
 class PriorityQueue:
     def __init__(
         self,
         arr=None,
-        has_higher_priority=lambda x, y: x[0] < y[0],
+        has_higher_priority=lambda x, y: x[0] > y[0],
         id_of=lambda x: x[1],
     ):
         if arr is None:

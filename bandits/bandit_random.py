@@ -6,11 +6,12 @@
 # import constants
 import random
 
-from bandits.bandit import Bandit, BanditArm
+from bandits.bandit import Bandit
+from bandits.bandit_arm import BanditArm
 
 
 class RandomBandit(Bandit):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def select_arm(

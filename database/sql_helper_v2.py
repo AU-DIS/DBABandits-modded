@@ -246,6 +246,7 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
         logging.info(f"Query {query.id} cost: {time}")
         execute_cost += time
         current_clustered_index_scans = {}
+        logging.info(f"Clustered_index_usage: {clustered_index_usage}")
         if clustered_index_usage:
             for index_scan in clustered_index_usage:
                 table_name = index_scan[0]
@@ -272,11 +273,14 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
                     temp_reward = max(table_scan_time) - index_use[constants.COST_TYPE_CURRENT_EXECUTION]
                     temp_reward = temp_reward/table_counts[table_name]
                 elif len(table_scan_times[table_name]) > 0:
+                    #print(table_scan_times)
                     temp_reward = max(table_scan_times[table_name]) - index_use[constants.COST_TYPE_CURRENT_EXECUTION]
                     temp_reward = temp_reward / table_counts[table_name]
                 else:
                     logging.error(f"Queries without index scan information {query.id}")
-                    raise Exception
+                    temp_reward = 0 - index_use[constants.COST_TYPE_CURRENT_EXECUTION]
+                    temp_reward = temp_reward / table_counts[table_name]
+                    #raise Exception
                 if table_name in current_clustered_index_scans:
                     temp_reward -= current_clustered_index_scans[table_name]/table_counts[table_name]
                 if index_name not in arm_rewards:
@@ -291,6 +295,8 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
             arm_rewards[key] = [0, -1 * creation_cost[key]]
     logging.info(f"Index creation cost: {sum(creation_cost.values())}")
     logging.info(f"Time taken to run the queries: {execute_cost}")
+    logging.info(f"Arm rewards keys: {arm_rewards.keys()}")
+    logging.info(f"Arm rewards values: {arm_rewards.values()}")
     return execute_cost, creation_cost, arm_rewards
 
 

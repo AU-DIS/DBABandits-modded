@@ -180,6 +180,9 @@ class Simulator(BaseSimulator):
             logging.info(f"Generated {len(index_arm_list)} arms")
             print("Generated arms: " + str(len(index_arm_list)))
             c3ucb_bandit.set_arms(index_arm_list)
+            if t==1:
+                print(index_arm_list[0])
+                print(type(index_arm_list[0]))
 
             # creating the context, here we pass all the columns in the database
             context_vectors_v1 = bandit_helper.get_name_encode_context_vectors_v2(
@@ -205,6 +208,9 @@ class Simulator(BaseSimulator):
                 )
             # getting the super arm from the bandit
             chosen_arm_ids = c3ucb_bandit.select_arm_v2(context_vectors, t)
+            print(chosen_arm_ids)
+            if (t == 1): 
+                exit()
             # chosen_arm_ids = c3ucb_bandit.select_arm(index_arm_list, current_round=t)
             print("Chosen arms: " + str(len(chosen_arm_ids)))
 

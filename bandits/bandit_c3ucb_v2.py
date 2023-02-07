@@ -8,7 +8,7 @@ import constants
 
 class C3UCBBaseBandit:
 
-    def __init__(self, context_size, hyper_alpha, hyper_lambda, oracle):
+    def __init__(self, context_size, hyper_alpha, hyper_lambda, oracle) -> None:
         self.arms = []
         self.alpha_original = hyper_alpha
         self.hyper_alpha = hyper_alpha

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from bandit_arm import BanditArm
+from .bandit_arm import BanditArm
 
 
 class Bandit:
@@ -7,12 +7,12 @@ class Bandit:
         self.arms: list[BanditArm] = []
 
     @abstractmethod
-    def select_arms(self, m: int, current_round: int) -> list[BanditArm]:
+    def select_arms(self, m: int, current_round: int) -> list[int]:
         pass
 
     @abstractmethod
     def update(
-        self, arms_played: list[BanditArm], arms_reward: dict[str, tuple[float, float]]
+        self, arms_played: list[int], arms_reward: dict[str, tuple[float, float]]
     ) -> None:
         pass
 

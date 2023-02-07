@@ -5,11 +5,13 @@ import shared.helper as helper
 import database.sql_connection as sql_connection
 from typing import Union
 import constants
+import shared.configs_v2 as configs
 
 
 class BaseSimulator:
     def __init__(self) -> None:
         # configuring the logger
+        
         logging.basicConfig(
             filename=helper.get_experiment_folder_path(configs.experiment_id) + configs.experiment_id + ".log",  # type: ignore
             filemode="w",

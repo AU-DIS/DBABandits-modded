@@ -22,6 +22,7 @@ class BanditArm:
         self.is_include = 0
         self.arm_value = {}
         self.clustered_index_time = 0
+        self.id: int = -1
 
     def __eq__(self, other):
         return self.index_name == other.index_name
