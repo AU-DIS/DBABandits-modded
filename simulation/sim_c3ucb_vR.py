@@ -67,7 +67,11 @@ class Simulator(BaseSimulator):
         )
 
         # Create oracle and the bandit
-        configs.max_memory -= int(sql_helper.get_current_pds_size(self.connection))
+        pds = int(sql_helper.get_current_pds_size(self.connection))
+        logging.info(f"PDS SIZE: {pds}")
+        configs.max_memory -= pds #int(sql_helper.get_current_pds_size(self.connection))
+        logging.info(f"Allowed Memory left for indexes: {configs.max_memory}")
+
         oracle = Oracle(configs.max_memory)
         c3ucb_bandit = bandits.C3UCB(
             context_size, configs.input_alpha, configs.input_lambda, oracle

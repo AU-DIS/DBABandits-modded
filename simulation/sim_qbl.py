@@ -36,8 +36,9 @@ class Simulator(BaseSimulator):
         #    number_of_columns * (1 + constants.CONTEXT_UNIQUENESS + constants.CONTEXT_INCLUDES)
         #    + constants.STATIC_CONTEXT_SIZE
         #)
-
         
+        
+
          # Running the bandit for T rounds and gather the reward
         arm_selection_count = {}
         chosen_arms_last_round = {}
@@ -111,7 +112,13 @@ class Simulator(BaseSimulator):
                 index_arms[key].query_ids.add(index_arm.query_id)
                 index_arms[key].query_ids_backup.add(index_arm.query_id)
         print("Number of arms generated from entire workload: " + str(len(index_arms.keys())))
-        
+
+        # Discount allowed memory.
+        pds = int(sql_helper.get_current_pds_size(self.connection))
+        logging.info(f"PDS SIZE: {pds}")
+        configs.max_memory -= pds #int(sql_helper.get_current_pds_size(self.connection))
+        logging.info(f"Allowed Memory left for indexes: {configs.max_memory}")
+
         index_arm_list = list(index_arms.values())
         #Create Bandit
         bandit = qbl.QBLBandit(index_arm_list)
@@ -211,7 +218,7 @@ class Simulator(BaseSimulator):
                 chosen_arms = {}
                 for arm in chosen_arm_ids:
                     if not used_memory + index_arm_list[arm].memory <= configs.max_memory:
-                        logging.info(f"Skipped arm: {chosen_arm_ids}. Memory needed: {index_arm_list[arm].memory}. Memory available: {configs.max_memory-used_memory}")
+                        logging.info(f"Skipped arm: {arm}. Memory needed: {index_arm_list[arm].memory}. Memory available: {configs.max_memory-used_memory}")
                         continue
                     index_name = index_arm_list[arm].index_name
                     chosen_arms[index_name] = index_arm_list[arm]
