@@ -18,7 +18,7 @@ output_folder = "resources/workloads/self_gen/"
 file_name_prefix = "tpc_h"
 file_extension = ".json"
 file_open_mood = 'w+'    # write 'w', append 'a+'
-workload_type = 'full_dynamic'    # 'static', 'random', 'full_dynamic', 'full_dynamic_random'
+workload_type = 'full_dynamic_random'    # 'static', 'random', 'full_dynamic', 'full_dynamic_random'
 
 # static parameters
 number_of_batches = 100
@@ -29,9 +29,9 @@ number_of_samples = 500
 
 # dynamic parameters
 number_of_samples_2 = 10000
-number_of_shifts = 4
-shift_length_queries = 500
-shift_length_rounds = 200
+number_of_shifts = 600
+shift_length_queries = 5
+shift_length_rounds = 1
 number_of_files = 1
 
 payloads = {1: {"LINEITEM": ["L_RETURNFLAG", "L_LINESTATUS", "L_QUANTITY", "L_EXTENDEDPRICE", "L_DISCOUNT", "L_TAX"]},
@@ -219,25 +219,25 @@ if workload_type == 'full_dynamic':
 
 if workload_type == 'full_dynamic_random':
     queries = {}
-    queries_per_shift = int(len(query_list)/number_of_shifts)
+    queries_per_shift = 5 # int(len(query_list)/number_of_shifts)
     os.chdir(dbgen_root)
     for i in range(number_of_samples_2):
         seed = random.randint(1, 1000000)
-        command2 = f"Debug\qgen.exe -r {seed}"
+        command2 = f"./qgen -r {seed}"
         output = subprocess.check_output(command2, shell=True)
-        queries[i] = output.decode("utf-8").split('\r\n\r\n\r\n')
+        queries[i] = [s.replace('\r\ngo', '') for s in  output.decode("utf-8").split('\r\nset showplan_all on;\r\ngo\r\n\r\n')]
     os.chdir(solution_root)
     for k in range(number_of_files):
         new_query_set = set(query_list)
         last_round_query_set = set()
         file_name_temp = file_name_prefix + "_" + workload_type + "_" + str(number_of_shifts) + "_" + str(shift_length_queries) \
             + "_" + str(k) + file_extension
-        with open(output_folder + file_name_temp, file_open_mood) as o_file:
+        with open(dirname+"/"+output_folder + file_name_temp, file_open_mood) as o_file:
             for i in range(number_of_shifts):
                 random_query_ids = random.sample(tuple(new_query_set), k=queries_per_shift)
                 last_round_query_set = set(random_query_ids)
                 print(f"shift {i}: {random_query_ids}")
-                new_query_set = new_query_set - last_round_query_set
+                #new_query_set = new_query_set - last_round_query_set
                 for j in range(shift_length_queries):
                     random_query_id = random.choice(random_query_ids)
                     random_sample_id = random.randint(0, number_of_samples_2 - 1)

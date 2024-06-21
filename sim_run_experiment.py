@@ -24,7 +24,7 @@ def select_driver():
 print(select_driver())  # ODBC Driver 17 for SQL Server
 
 # Define Experiment ID list that we need to run
-exp_id_list = ["tpc_h_selfgen_1"]#["tpc_h_skew_static_10_MAB"]
+exp_id_list = ["tpc_h_highshift"]#["tpc_h_skew_static_10_MAB"]
 
 # Comparing components
 OPTIMAL = constants.COMPONENT_OPTIMAL in configs.components
@@ -83,11 +83,11 @@ for i in range(len(exp_id_list)):
             for version, Simulator in Simulators.items():
                 #version_number = version.split("_v", 1)[1]
                 exp_report_mab = ExpReport(configs.experiment_id,
-                                           constants.COMPONENT_MAB + exp_id_list[i], configs.reps,
+                                           constants.COMPONENT_MAB + version + exp_id_list[i], configs.reps,
                                            configs.rounds)
                 for r in range(configs.reps):
                     simulator = Simulator()
-                    results, total_workload_time = simulator.run()
+                    results, total_workload_time = simulator.run(exp_report_list, version, exp_id_list[i])
                     temp = DataFrame(results, columns=[constants.DF_COL_BATCH, constants.DF_COL_MEASURE_NAME,
                                                        constants.DF_COL_MEASURE_VALUE])
                     temp.append([-1, constants.MEASURE_TOTAL_WORKLOAD_TIME, total_workload_time])

@@ -52,10 +52,10 @@ class QBLBandit(Bandit):
             idx: str = arm.index_name
             logging.info(f'Arm played: {arm_id}, {idx}')
             if not self.in_active_term[idx]:
-                self.total_last_term_reward -= self.last_term_reward[idx]
-                self.last_term_reward[idx] = 0
-                self.total_last_term_length -= self.last_term_length[idx]
-                self.last_term_length[idx] = 0
+                self.total_last_term_reward -= self.last_term_reward[idx]-self.last_term_reward[idx]/self.last_term_length[idx]
+                self.last_term_reward[idx] /= self.last_term_length[idx]
+                self.total_last_term_length -= self.last_term_length[idx]-1
+                self.last_term_length[idx] = 1
                 self.in_active_term[idx] = True
 
              
@@ -69,10 +69,7 @@ class QBLBandit(Bandit):
             )
             local_avg: float = self.last_term_reward[idx] / float(self.last_term_length[idx])
 
-            is_rewarding: bool = (
-                weighted_global_avg
-                < local_avg * 0.85 * random.choices([0, 1], weights=[0.001, 0.999])[0]
-            )
+            is_rewarding: bool = (weighted_global_avg < local_avg * random.uniform(0.9, 1.1))
             
             logging.info(f'Global avg: {weighted_global_avg}, Local_avg: {local_avg}')
             if not is_rewarding:

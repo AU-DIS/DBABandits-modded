@@ -277,7 +277,7 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
                     temp_reward = max(table_scan_times[table_name]) - index_use[constants.COST_TYPE_CURRENT_EXECUTION]
                     temp_reward = temp_reward / table_counts[table_name]
                 else:
-                    logging.error(f"Queries without index scan information {query.id}")
+                    logging.warn(f"Queries without index scan information {query.id}")
                     temp_reward = 0 - index_use[constants.COST_TYPE_CURRENT_EXECUTION]
                     temp_reward = temp_reward / table_counts[table_name]
                     #raise Exception

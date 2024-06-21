@@ -3,7 +3,8 @@ import logging
 import operator
 import pprint
 from importlib import reload
-
+from pathlib import Path
+import pickle
 
 import numpy
 from pandas import DataFrame
@@ -44,7 +45,8 @@ class BaseSimulator:
 
 
 class Simulator(BaseSimulator):
-    def run(self):
+    def run(self,exp_report_list: list, version, exp_id):
+        first_save=True
         pp = pprint.PrettyPrinter()
         reload(configs)
         results = []
@@ -76,8 +78,8 @@ class Simulator(BaseSimulator):
         arm_selection_count = {}
         chosen_arms_last_round = {}
         next_workload_shift = 0
-        queries_start = configs.queries_start_list[next_workload_shift]
-        queries_end = configs.queries_end_list[next_workload_shift]
+        queries_start = 0#configs.queries_start_list[next_workload_shift]
+        queries_end = configs.queries_per_round#configs.queries_end_list[next_workload_shift]
         query_obj_additions = []
         total_time = 0.0
 
@@ -94,12 +96,14 @@ class Simulator(BaseSimulator):
             # used to demo the dynamic query flow. We read the queries from the start and move the window each round
 
             # check if workload shift is required
-            if t - configs.hyp_rounds == configs.workload_shifts[next_workload_shift]:
-                queries_start = configs.queries_start_list[next_workload_shift]
-                queries_end = configs.queries_end_list[next_workload_shift]
-                if len(configs.workload_shifts) > next_workload_shift + 1:
-                    next_workload_shift += 1
+            #if t - configs.hyp_rounds == configs.workload_shifts[next_workload_shift]:
+            #    queries_start = configs.queries_start_list[next_workload_shift]
+            #    queries_end = configs.queries_end_list[next_workload_shift]
+            #    if len(configs.workload_shifts) > next_workload_shift + 1:
+            #        next_workload_shift += 1
 
+            queries_start = queries_end
+            queries_end += configs.queries_per_round
             # New set of queries in this batch, required for query execution
             queries_current_batch = self.queries[queries_start:queries_end]
 
@@ -209,8 +213,7 @@ class Simulator(BaseSimulator):
             # getting the super arm from the bandit
             chosen_arm_ids = c3ucb_bandit.select_arm_v2(context_vectors, t)
             print(chosen_arm_ids)
-            if (t == 1): 
-                exit()
+            
             # chosen_arm_ids = c3ucb_bandit.select_arm(index_arm_list, current_round=t)
             print("Chosen arms: " + str(len(chosen_arm_ids)))
 
@@ -226,6 +229,9 @@ class Simulator(BaseSimulator):
             if chosen_arm_ids:
                 chosen_arms = {}
                 for arm in chosen_arm_ids:
+                    if arm >= len(index_arm_list):
+                        logging.error(f'Chosen arm id {arm} is not in index_arm_list with length {len(index_arm_list)}. Skipping it.')
+                        continue
                     index_name = index_arm_list[arm].index_name
                     chosen_arms[index_name] = index_arm_list[arm]
                     used_memory = used_memory + index_arm_list[arm].memory
@@ -358,6 +364,27 @@ class Simulator(BaseSimulator):
                 best_super_arm = min(super_arm_scores, key=super_arm_scores.get)
 
             print(f"current total {t}: ", total_time)
+
+
+            #Save
+            if t%50 == 0:
+                exp_report_list_save = exp_report_list.copy()
+                exp_report_mab = ExpReport(configs.experiment_id,
+                                           constants.COMPONENT_MAB + version + exp_id, configs.reps,
+                                           configs.rounds)
+                temp = DataFrame(results, columns=[constants.DF_COL_BATCH, constants.DF_COL_MEASURE_NAME,
+                                                       constants.DF_COL_MEASURE_VALUE])
+                temp.append([-1, constants.MEASURE_TOTAL_WORKLOAD_TIME, total_time])
+                temp[constants.DF_COL_REP] = 1
+                exp_report_mab.add_data_list(temp)
+                if first_save:
+                    exp_report_list_save.append(exp_report_mab)
+                
+                path = (Path(__file__).parent.parent / f"experiments\\savepointc3ucb{t}\\reports.pickle").resolve()
+                with path.open("wb") as f:
+                    pickle.dump(exp_report_list_save, f)
+
+
 
         logging.info(
             "Time taken by bandit for " + str(configs.rounds) + " rounds: " + str(total_time)

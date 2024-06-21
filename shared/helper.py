@@ -9,6 +9,7 @@ import seaborn as sns
 from pandas import DataFrame
 from types import ModuleType
 
+import tikzplotlib
 import constants
 
 
@@ -178,21 +179,33 @@ def plot_exp_report(exp_id, exp_report_list, measurement_names, log_y=False):
         final_df = DataFrame()
         for exp_report in exp_report_list:
             df = exp_report.data
+            exp_report.component_id = exp_report.component_id.replace("_","")
             df[constants.DF_COL_COMP_ID] = exp_report.component_id
             final_df = pd.concat([final_df, df])
+            #print(final_df)
             comps.append(exp_report.component_id)
 
-        final_df = final_df[final_df[constants.DF_COL_MEASURE_NAME] == measurement_name][[constants.DF_COL_BATCH,constants.DF_COL_MEASURE_VALUE]]
+        final_df = final_df[final_df[constants.DF_COL_MEASURE_NAME] == measurement_name][[constants.DF_COL_BATCH,constants.DF_COL_MEASURE_VALUE,constants.DF_COL_COMP_ID]]
         # Error style = 'band' / 'bars'
-        print(final_df.dtypes)
+        #print(final_df)
         print(constants.DF_COL_BATCH)
         print(constants.DF_COL_MEASURE_VALUE)
         print(constants.DF_COL_COMP_ID)
-        plot = final_df.plot.line( x=constants.DF_COL_BATCH, y=constants.DF_COL_MEASURE_VALUE) #, hue=None,
+        #plot = final_df.plot.line( x=constants.DF_COL_BATCH, y=constants.DF_COL_MEASURE_VALUE) #, hue=None,
                            # errorbar="sd", err_style="band")
-        plot_title = measurement_name+"Comparison"                   
-        
-        plot.figure.savefig(plot_title.replace(" ","_")+".png")
+        plot_title = measurement_name+"Comparison" 
+        plt.figure()                  
+        for id in final_df[constants.DF_COL_COMP_ID].unique():
+            mask = final_df[final_df[constants.DF_COL_COMP_ID] == id][[constants.DF_COL_BATCH,constants.DF_COL_MEASURE_VALUE]]
+            #plot.figure.savefig(plot_title.replace(" ","")+".png")
+            plt.plot(mask[constants.DF_COL_BATCH].to_numpy(), mask[constants.DF_COL_MEASURE_VALUE].to_numpy(), label=id)
+        plt.title(plot_title)
+        plt.xlabel("Round t")
+        plt.ylabel("time (s)")
+        plt.legend()
+        plt.savefig(plot_title.replace(" ","")+".png")
+
+        tikzplotlib.save(plot_title.replace(" ","")+".tex")
         #if log_y:
         #    sns_plot.set(yscale="log")
         #plot_title = measurement_name + " Comparison"

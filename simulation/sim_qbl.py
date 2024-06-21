@@ -19,7 +19,7 @@ import operator
 
 class Simulator(BaseSimulator):
 
-    def run(self) -> None: #TODO: correct return type
+    def run(self,exp_report_list, version, exp_id_list) -> None: #TODO: correct return type
         pp = pprint.PrettyPrinter()
         results = []
         reload(configs)
@@ -210,6 +210,9 @@ class Simulator(BaseSimulator):
             if chosen_arm_ids:
                 chosen_arms = {}
                 for arm in chosen_arm_ids:
+                    if not used_memory + index_arm_list[arm].memory <= configs.max_memory:
+                        logging.info(f"Skipped arm: {chosen_arm_ids}. Memory needed: {index_arm_list[arm].memory}. Memory available: {configs.max_memory-used_memory}")
+                        continue
                     index_name = index_arm_list[arm].index_name
                     chosen_arms[index_name] = index_arm_list[arm]
                     used_memory = used_memory + index_arm_list[arm].memory

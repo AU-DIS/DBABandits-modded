@@ -25,7 +25,7 @@ RL = constants.COMPONENT_DDQN in configs.components
 
 # Generate form saved reports
 FROM_FILE = False
-SEPARATE_EXPERIMENTS = True
+SEPARATE_EXPERIMENTS = False
 PLOT_LOG_Y = False
 PLOT_MEASURE = (constants.MEASURE_BATCH_TIME, constants.MEASURE_QUERY_EXECUTION_COST,
                 constants.MEASURE_INDEX_CREATION_COST)
