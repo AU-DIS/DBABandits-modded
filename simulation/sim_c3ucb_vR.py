@@ -234,7 +234,7 @@ class Simulator(BaseSimulator):
                 chosen_arms = {}
                 for arm in chosen_arm_ids:
                     if arm >= len(index_arm_list):
-                        logging.error(f'Chosen arm id {arm} is not in index_arm_list with length {len(index_arm_list)}. Skipping it.')
+                        logging.warn(f'Chosen arm id {arm} is not in index_arm_list with length {len(index_arm_list)}. Skipping it.')
                         continue
                     index_name = index_arm_list[arm].index_name
                     chosen_arms[index_name] = index_arm_list[arm]
@@ -283,7 +283,7 @@ class Simulator(BaseSimulator):
                     query_obj_list_current,
                 )
             else:
-                time_taken, creation_cost_dict, arm_rewards = sql_helper.create_query_drop_v3(
+                time_taken, creation_cost_dict, arm_rewards, index_use, index_use_rows = sql_helper.create_query_drop_v3(
                     self.connection,
                     constants.SCHEMA_NAME,
                     chosen_arms,
@@ -357,6 +357,8 @@ class Simulator(BaseSimulator):
                 results.append(
                     [actual_round_number, constants.MEASURE_MEMORY_COST, current_config_size]
                 )
+                results.append([actual_round_number, constants.MEASURE_INDEX_USAGE, index_use])
+                results.append([actual_round_number, constants.MEASURE_INDEX_USAGE_ROWS, index_use_rows])
             else:
                 total_round_time = (end_time_round - start_time_round).total_seconds() - (
                     end_time_create_query - start_time_create_query

@@ -205,21 +205,44 @@ class Simulator(BaseSimulator):
                     index_arms[key].query_ids.add(index_arm.query_id)
                     index_arms[key].query_ids_backup.add(index_arm.query_id)
 
-
-            chosen_arm_ids = bandit.select_arms(8,t)
-            logging.info(f"Chosen arm ids: {chosen_arm_ids}")
+            #Over select arms. Then later we only keep the top arms within the budget.
+            chosen_arm_ids = []
+            if t != 0:
+                chosen_arm_ids = bandit.select_arms(5,t)
+                logging.info(f"Chosen arm ids: {chosen_arm_ids}")
 
 
             ######################THIS IS STUFF#####################
              # get objects for the chosen set of arm ids
             chosen_arms = {}
             used_memory = 0
+            
+            
+            
+            #Filter the selection given memory budget and translate id to arm
+            #We do not skip costly arms to look for cheaper ones with lower priority.
+            #Doing so would either have to reward an unexplored arm 0 or keep it untouched in the queue. 
+            #Both which are not ideal for finding a true ranking. 
+            
+            #Add a buffer to include a final index if it is just a bit over the configure memory budget
+            allowed_deviance = -1000 
+            #When deviance is negative we lower the allowed budget. When the adjusted budget is broken, we add one final index and stop. As such the final memory use may deviate
+            # from the budget. Negative deviance covers for big indexes that could give an unfair advantage by going well beyond the real memory budget.  
+            
             if chosen_arm_ids:
+                #temp_chosen_arm_ids = []
                 chosen_arms = {}
+                #stop = False
                 for arm in chosen_arm_ids:
-                    if not used_memory + index_arm_list[arm].memory <= configs.max_memory:
-                        logging.info(f"Skipped arm: {arm}. Memory needed: {index_arm_list[arm].memory}. Memory available: {configs.max_memory-used_memory}")
-                        continue
+                    #if stop:
+                    #    break
+                    #if index_arm_list[arm].memory > configs.max_memory+allowed_deviance:
+                    #    logging.info(f"Ignoring arm as it is too big: {arm}. Memory needed: {index_arm_list[arm].memory}. Memory budget available: {configs.max_memory-used_memory}. With allowed deviance: {configs.max_memory+allowed_deviance-used_memory}")
+                    #    continue
+                    #if used_memory + index_arm_list[arm].memory > configs.max_memory+allowed_deviance:
+                    #    logging.info(f"Skipping after arm: {arm}. Memory needed: {index_arm_list[arm].memory}. Memory budget available: {configs.max_memory-used_memory}. With allowed deviance: {configs.max_memory+allowed_deviance-used_memory}")
+                    #    stop = True #We add this arm as the final arm
+                    #temp_chosen_arm_ids.append(arm) 
                     index_name = index_arm_list[arm].index_name
                     chosen_arms[index_name] = index_arm_list[arm]
                     used_memory = used_memory + index_arm_list[arm].memory
@@ -227,8 +250,9 @@ class Simulator(BaseSimulator):
                         arm_selection_count[index_name] += 1
                     else:
                         arm_selection_count[index_name] = 1
-
-            # clean everything at start of actual rounds
+                #chosen_arm_ids = temp_chosen_arm_ids
+            logging.info(f"Memory used for indexes: {used_memory}. Budget deviance: {configs.max_memory-used_memory}")      
+            # clean up if using hyperrounds from framework
             if configs.hyp_rounds != 0 and t == configs.hyp_rounds:
                 sql_helper.bulk_drop_index(
                     self.connection, constants.SCHEMA_NAME, chosen_arms_last_round
@@ -267,7 +291,7 @@ class Simulator(BaseSimulator):
                     query_obj_list_current,
                 )
             else:
-                time_taken, creation_cost_dict, arm_rewards = sql_helper.create_query_drop_v3(
+                time_taken, creation_cost_dict, arm_rewards, index_use, index_use_rows = sql_helper.create_query_drop_v3(
                     self.connection,
                     constants.SCHEMA_NAME,
                     chosen_arms,
@@ -293,8 +317,8 @@ class Simulator(BaseSimulator):
 
 
             #####################THIS IS STUFF END##################
-
-            bandit.update(chosen_arm_ids, arm_rewards)
+            if t != 0:
+                bandit.update(chosen_arm_ids, arm_rewards)
 
 
             #####################THIS IS MORE STUFF#################
@@ -346,6 +370,8 @@ class Simulator(BaseSimulator):
                 results.append(
                     [actual_round_number, constants.MEASURE_MEMORY_COST, current_config_size]
                 )
+                results.append([actual_round_number, constants.MEASURE_INDEX_USAGE, index_use])
+                results.append([actual_round_number, constants.MEASURE_INDEX_USAGE_ROWS, index_use_rows])
             else:
                 total_round_time = (end_time_round - start_time_round).total_seconds() - (
                     end_time_create_query - start_time_create_query

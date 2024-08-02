@@ -41,7 +41,7 @@ FROM_FILE = False
 SEPARATE_EXPERIMENTS = False
 PLOT_LOG_Y = False
 PLOT_MEASURE = (constants.MEASURE_BATCH_TIME, constants.MEASURE_QUERY_EXECUTION_COST,
-                constants.MEASURE_INDEX_CREATION_COST)
+                constants.MEASURE_INDEX_CREATION_COST, constants.MEASURE_INDEX_USAGE, constants.MEASURE_INDEX_USAGE_ROWS)
 UNIFORM = False
 
 exp_report_list = []

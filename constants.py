@@ -11,7 +11,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGGING_LEVEL = logging.INFO
 WorkloadType = NewType("WorkloadType", list[dict[str, Union[int, str, dict[str,list[str]]]]]) 
 
-TABLE_SCAN_TIME_LENGTH = 1000
+TABLE_SCAN_TIME_LENGTH = 100
 
 # ===============================  Database / Workload  ===============================
 SCHEMA_NAME = 'dbo'
@@ -59,6 +59,8 @@ MEASURE_QUERY_EXECUTION_COST = "Query Execution Cost"
 MEASURE_MEMORY_COST = "Memory Cost"
 MEASURE_BATCH_TIME = "Batch Time"
 MEASURE_HYP_BATCH_TIME = "Hyp Batch Time"
+MEASURE_INDEX_USAGE = "Query Execution Index Usage"
+MEASURE_INDEX_USAGE_ROWS = "Query Execution Index Usage Rows"
 
 COMPONENT_MAB = "MAB"
 COMPONENT_TA_OPTIMAL = "TA_OPTIMAL"

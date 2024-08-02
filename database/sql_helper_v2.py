@@ -236,6 +236,10 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
     #query_seen = {}
     if tables_global is None:
         get_tables(connection)
+    total_index_use = 0
+    total_table_use = 0
+    total_index_use_rows = 0
+    total_table_use_rows = 0
     for query in queries:
         #if query.id in query_seen:
         #    continue
@@ -247,10 +251,13 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
         execute_cost += time
         current_clustered_index_scans = {}
         logging.info(f"Clustered_index_usage: {clustered_index_usage}")
+        logging.info(f"Non_clustered_index_usage: {non_clustered_index_usage}")
         if clustered_index_usage:
             for index_scan in clustered_index_usage:
                 table_name = index_scan[0]
                 current_clustered_index_scans[table_name] = index_scan[constants.COST_TYPE_CURRENT_EXECUTION]
+                total_table_use += index_scan[constants.COST_TYPE_CURRENT_EXECUTION]
+                total_table_use_rows += index_scan[4]
                 if len(query.table_scan_times[table_name]) < constants.TABLE_SCAN_TIME_LENGTH:
                     query.table_scan_times[table_name].append(index_scan[constants.COST_TYPE_CURRENT_EXECUTION])
                     table_scan_times[table_name].append(index_scan[constants.COST_TYPE_CURRENT_EXECUTION])
@@ -265,6 +272,8 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
                     table_counts[table_name] = 1
             for index_use in non_clustered_index_usage:
                 index_name = index_use[0]
+                total_index_use += index_use[constants.COST_TYPE_CURRENT_EXECUTION]
+                total_index_use_rows += index_use[4]
                 table_name = bandit_arm_list[index_name].table_name
                 if len(query.table_scan_times[table_name]) < constants.TABLE_SCAN_TIME_LENGTH:
                     query.index_scan_times[table_name].append(index_use[constants.COST_TYPE_CURRENT_EXECUTION])
@@ -278,6 +287,7 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
                     temp_reward = temp_reward / table_counts[table_name]
                 else:
                     logging.warn(f"Queries without index scan information {query.id}")
+                    #If we reach this a table have never been scanned directly. 
                     temp_reward = 0 - index_use[constants.COST_TYPE_CURRENT_EXECUTION]
                     temp_reward = temp_reward / table_counts[table_name]
                     #raise Exception
@@ -297,7 +307,7 @@ def create_query_drop_v3(connection, schema_name, bandit_arm_list, arm_list_to_a
     logging.info(f"Time taken to run the queries: {execute_cost}")
     logging.info(f"Arm rewards keys: {arm_rewards.keys()}")
     logging.info(f"Arm rewards values: {arm_rewards.values()}")
-    return execute_cost, creation_cost, arm_rewards
+    return execute_cost, creation_cost, arm_rewards, total_index_use/(total_table_use+total_index_use), total_index_use_rows/(total_table_use_rows+total_index_use_rows)
 
 
 def merge_index_use(index_uses):
