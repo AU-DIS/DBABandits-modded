@@ -17,9 +17,15 @@ import datetime
 import pprint
 import operator
 
+import pickle
+from bandits.experiment_report import ExpReport
+from pandas import DataFrame
+from pathlib import Path
+
 class Simulator(BaseSimulator):
 
     def run(self,exp_report_list, version, exp_id_list) -> None: #TODO: correct return type
+        first_save=True
         pp = pprint.PrettyPrinter()
         results = []
         reload(configs)
@@ -116,7 +122,7 @@ class Simulator(BaseSimulator):
         # Discount allowed memory.
         pds = int(sql_helper.get_current_pds_size(self.connection))
         logging.info(f"PDS SIZE: {pds}")
-        configs.max_memory -= pds #int(sql_helper.get_current_pds_size(self.connection))
+        #configs.max_memory -= pds #int(sql_helper.get_current_pds_size(self.connection))
         logging.info(f"Allowed Memory left for indexes: {configs.max_memory}")
 
         index_arm_list = list(index_arms.values())
@@ -388,6 +394,24 @@ class Simulator(BaseSimulator):
             #    best_super_arm = min(super_arm_scores, key=super_arm_scores.get)
 
             print(f"current total {t}: ", total_time)
+            
+            #Save
+            if t%499 == 0:
+                exp_report_list_save = exp_report_list.copy()
+                exp_report_mab = ExpReport(configs.experiment_id,
+                                           constants.COMPONENT_MAB + version + exp_id_list, configs.reps,
+                                           configs.rounds)
+                temp = DataFrame(results, columns=[constants.DF_COL_BATCH, constants.DF_COL_MEASURE_NAME,
+                                                       constants.DF_COL_MEASURE_VALUE])
+                temp.append([-1, constants.MEASURE_TOTAL_WORKLOAD_TIME, total_time])
+                temp[constants.DF_COL_REP] = 1
+                exp_report_mab.add_data_list(temp)
+                if first_save:
+                    exp_report_list_save.append(exp_report_mab)
+                
+                path = (Path(__file__).parent.parent / f"experiments\\savepointqblbudget{t}\\reports.pickle").resolve()
+                with path.open("wb") as f:
+                    pickle.dump(exp_report_list_save, f)
 
         logging.info(
             "Time taken by bandit for " + str(configs.rounds) + " rounds: " + str(total_time)

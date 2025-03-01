@@ -24,7 +24,7 @@ def select_driver():
 print(select_driver())  # ODBC Driver 17 for SQL Server
 
 # Define Experiment ID list that we need to run
-exp_id_list = ["tpc_h_highshift"]#["tpc_h_skew_static_10_MAB"]
+exp_id_list = ["tpc_h_selfgen_1"]#["tpc_h_skew_static_10_MAB"]
 
 # Comparing components
 OPTIMAL = constants.COMPONENT_OPTIMAL in configs.components

@@ -69,7 +69,7 @@ class Simulator(BaseSimulator):
         # Create oracle and the bandit
         pds = int(sql_helper.get_current_pds_size(self.connection))
         logging.info(f"PDS SIZE: {pds}")
-        configs.max_memory -= pds #int(sql_helper.get_current_pds_size(self.connection))
+        #configs.max_memory -= pds #int(sql_helper.get_current_pds_size(self.connection))
         logging.info(f"Allowed Memory left for indexes: {configs.max_memory}")
 
         oracle = Oracle(configs.max_memory)

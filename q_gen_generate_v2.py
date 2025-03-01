@@ -7,7 +7,7 @@ import string
 
 # set parameters
 dirname = os.path.dirname(__file__)
-dbgen_root = os.path.join(dirname, './../dbgen')
+dbgen_root = os.path.join(dirname, '../TPC-H-Dataset-Generator-MS-SQL-Server/dbgen')
 solution_root = os.path.join(dirname, './generate_solution')
 
 

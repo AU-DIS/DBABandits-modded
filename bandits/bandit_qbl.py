@@ -8,7 +8,7 @@ import logging
 class QBLBandit(Bandit):
     def __init__(self, arms: list[BanditArm], weighted: bool = False) -> None:
         self.arms: list[BanditArm] = arms
-        #random.shuffle(self.arms)
+        random.shuffle(self.arms)
         for i, arm in enumerate(self.arms):
             arm.id = i
         self.arm_names = {}
